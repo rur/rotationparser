@@ -5,6 +5,9 @@ import (
 	"strings"
 )
 
+// SprintNodeTree is a modified version of a general tree hierarchy viewer
+// used here to print binary trees, however, to print n-ary trees would involve minimal
+// modification
 func SprintNodeTree(v *Node) string {
 	if v == nil {
 		return "- nil"
@@ -16,8 +19,8 @@ func SprintNodeTree(v *Node) string {
 	return str.String()
 }
 
-// fprintViewTree delves recursively into view and sub views and writes
-// a tree prepresentation of the supplied view
+// fprintViewTree delves recursively into expession nodes writes
+// a tree prepresentation of the supplied expression
 func fprintViewTree(w io.Writer, prefix []byte, children []*Node) {
 	for i, sub := range children {
 		if sub == nil {
