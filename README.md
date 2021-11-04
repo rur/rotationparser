@@ -1,4 +1,6 @@
 ## Recursive Descent Parser Exploration
 
-Practice implementation for a general purpose expression parser using simple
-AST transformations. Just curious to find out how far this approach will take me.
+Explore using tree rotations to enforce operator precedence when building
+an AST.
+
+Just curious to find out how far this approach will take me.
