@@ -14,6 +14,10 @@ type Token struct {
 	Code string
 }
 
+func (token *Token) String() string {
+	return fmt.Sprintf("{%d, %s}", token.Type, token.Code)
+}
+
 // ParseExpression([]Token{"12", "*", "5", "+ "7"})
 // => {+ {* {12} {5}} {7}}
 func ParseExpression(tokens []Token) (out *Node) {

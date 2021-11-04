@@ -13,7 +13,7 @@ func TestParseExpression(t *testing.T) {
 	}{
 		{
 			name:   "Basic",
-			tokens: []Token{{Factor, "3"}, {Plus, "+"}, {Factor, "4"}},
+			tokens: MustTokenize("3+4"),
 			want: []string{
 				"- +",
 				"  |- 3",
@@ -22,7 +22,7 @@ func TestParseExpression(t *testing.T) {
 		},
 		{
 			name:   "Compound expression same precadence",
-			tokens: []Token{{Factor, "3"}, {Plus, "+"}, {Factor, "4"}, {Minus, "(-)"}, {Factor, "5"}},
+			tokens: MustTokenize("3 + 4 - 5"),
 			want: []string{
 				"- (-)",
 				"  |- +",
@@ -33,7 +33,7 @@ func TestParseExpression(t *testing.T) {
 		},
 		{
 			name:   "Compound expression varying precadence",
-			tokens: []Token{{Factor, "3"}, {Plus, "+"}, {Factor, "4"}, {Multiply, "*"}, {Factor, "5"}},
+			tokens: MustTokenize(`3 + 4 * 5`),
 			want: []string{
 				"- *",
 				"  |- +",
