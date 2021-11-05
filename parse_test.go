@@ -42,6 +42,21 @@ func TestParseExpression(t *testing.T) {
 				"  '- 5",
 			},
 		},
+		{
+			name:   "apply precedence recursively",
+			tokens: MustTokenize(`3 + 4 - 5 + 6 - 7`),
+			want: []string{
+				"- (-)",
+				"  |- +",
+				"  |  |- (-)",
+				"  |  |  |- +",
+				"  |  |  |  |- 3",
+				"  |  |  |  '- 4",
+				"  |  |  '- 5",
+				"  |  '- 6",
+				"  '- 7",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

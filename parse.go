@@ -57,4 +57,6 @@ func applyPrecadence(result **Node) {
 	*result = lift
 	top.Right = lift.Left
 	lift.Left = top
+	// apply recursively
+	applyPrecadence(&lift.Left)
 }
