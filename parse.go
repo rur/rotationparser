@@ -4,13 +4,12 @@ import "fmt"
 
 type Node struct {
 	Token Token
-
 	Left  *Node
 	Right *Node
 }
 
 type Token struct {
-	Type int
+	Type TokenType
 	Code string
 }
 
@@ -47,7 +46,7 @@ func applyPrecadence(result **Node) {
 		return
 	}
 	delta := Precadence((*result).Token.Type) - Precadence((*result).Right.Token.Type)
-	if delta > 0 || delta == 0 && RightAssociative((*result).Token.Type) {
+	if delta < 0 || delta == 0 && RightAssociative((*result).Token.Type) {
 		// do nothing
 		return
 	}
@@ -57,6 +56,6 @@ func applyPrecadence(result **Node) {
 	*result = lift
 	top.Right = lift.Left
 	lift.Left = top
-	// apply recursively
+	// apply recursively after the prev top nodes right side was changed
 	applyPrecadence(&lift.Left)
 }

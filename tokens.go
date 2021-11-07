@@ -2,28 +2,32 @@ package rotationparser
 
 import "fmt"
 
+type TokenType int
+
 const (
-	Factor = iota + 1
+	Factor TokenType = iota + 1
 	Comma
 	Minus
 	Plus
 	Multiply
 	Divide
+	OpenParen
+	CloseParen
 )
 
-func Precadence(tokenType int) int {
-	switch tokenType {
+func Precadence(tt TokenType) int {
+	switch tt {
 	case Multiply, Divide:
 		return 100
 	case Minus, Plus:
 		return 50
 	default:
-		return -1
+		return 9999
 	}
 }
 
-func RightAssociative(tokenType int) bool {
-	switch tokenType {
+func RightAssociative(tt TokenType) bool {
+	switch tt {
 	// we don't have right associative operators just yet
 	default:
 		return false
@@ -49,6 +53,10 @@ func Tokenize(code string) (tokens []Token, err error) {
 				tokens = append(tokens, Token{Multiply, "*"})
 			case '/':
 				tokens = append(tokens, Token{Divide, "/"})
+			case '(':
+				tokens = append(tokens, Token{OpenParen, "("})
+			case ')':
+				tokens = append(tokens, Token{CloseParen, ")"})
 			case ' ', '\n', '\r', '\t':
 				// ignore whitespace
 			default:
