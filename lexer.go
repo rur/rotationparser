@@ -10,7 +10,7 @@ import (
 type itemType int
 
 const (
-	eofChar   rune     = 0
+	eofChar   rune     = 0 // nullcode
 	itemError itemType = -1
 	itemEOF   itemType = iota
 	itemNumber
@@ -58,8 +58,11 @@ func (lx *lexer) run() {
 	close(lx.items)
 }
 
-// prevWidth will return the number of bytes to the last unicode character
-// it will return zero if lx.cursor is <= lx.start
+// prevWidth will return the number of bytes from the cursor to the previous unicode character
+//
+// Note: This will return zero if lx.cursor is <= lx.start. Preventing code from
+//       attempting to scan backward from _start_ will negate the need
+//       to use the io.Scanner interface when replacing the input string with an io.Reader
 func (lx *lexer) prevWidth() int {
 	for j := lx.cursor - 1; j >= lx.start; j-- {
 		if lx.input[j]&192 == 128 {
@@ -192,12 +195,10 @@ func lexNumber(lx *lexer) stateFn {
 // lexOperator will scan for operator symbols
 func lexOperator(lx *lexer) stateFn {
 	if lx.accept("+-*/^&|") {
-		// one character wonder!
-	} else {
-		panic("Lexer bug unexpected operator character")
+		lx.emit(itemOperator)
+		return lexAny
 	}
-	lx.emit(itemOperator)
-	return lexAny
+	panic("Lexer bug unexpected operator character")
 }
 
 // lex will concurrently scan the input string, delivering lexeme items over the channel
@@ -212,10 +213,10 @@ func lex(name, input string) (*lexer, <-chan item) {
 	return l, l.items
 }
 
-type charTypes uint
+type charType uint
 
 const (
-	charAlphaLower charTypes = 1 << iota
+	charAlphaLower charType = 1 << iota
 	charAlphaUpper
 	charUnderscore
 	charNonZeroDigit
@@ -225,22 +226,27 @@ const (
 	charNewline
 )
 
-func matchCharset(char rune, typeMask charTypes) bool {
+// matchCharset checks that the character match the type mask
+func matchCharset(char rune, mask charType) (match bool) {
+	var typ charType
+	defer func() {
+		match = typ&mask != 0
+	}()
 	switch char {
 	case '1', '2', '3', '4', '5', '6', '7', '8', '9':
-		return charNonZeroDigit&typeMask != 0
+		typ = charNonZeroDigit
 	case '0':
-		return charZero&typeMask != 0
+		typ = charZero
 	case 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z':
-		return charAlphaLower&typeMask != 0
+		typ = charAlphaLower
 	case 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z':
-		return charAlphaUpper&typeMask != 0
+		typ = charAlphaUpper
 	case '+', '-', '*', '/', '&', '|', '^':
-		return charSymbol&typeMask != 0
+		typ = charSymbol
 	case ' ', '\t':
-		return charWhitespace&typeMask != 0
+		typ = charWhitespace
 	case '\n', '\r':
-		return charNewline&typeMask != 0
+		typ = charNewline
 	}
-	return false
+	return
 }
