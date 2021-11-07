@@ -1,4 +1,4 @@
-// Follow implementation lexical scanning as described by R Pike here https://www.youtube.com/watch?v=HxaD_trXwRE
+// Lexical scanning following the outline described by R Pike here https://www.youtube.com/watch?v=HxaD_trXwRE
 package rotationparser
 
 import (
@@ -7,54 +7,55 @@ import (
 	"unicode/utf8"
 )
 
-type itemType int
+type ItemType int
 
 const (
-	eofChar   rune     = 0 // nullcode
-	itemError itemType = -1
-	itemEOF   itemType = iota
-	itemNumber
-	itemOperator
-	itemLeftParen
-	itemRightParen
+	ItemError ItemType = -1
+	ItemEOF   ItemType = iota
+	ItemNumber
+	ItemOperator
+	ItemLeftParen
+	ItemRightParen
 )
 
 // item is a lexeme for this lexer
-type item struct {
-	typ   itemType
-	value string
+type Lexeme struct {
+	Type  ItemType
+	Value string
 }
 
 // String implements the stringer interface
-func (i item) String() string {
-	switch i.typ {
-	case itemError:
-		return i.value
-	case itemEOF:
+func (l Lexeme) String() string {
+	switch l.Type {
+	case ItemError:
+		return l.Value
+	case ItemEOF:
 		return "EOF"
 	}
-	if len(i.value) > 10 {
-		return fmt.Sprintf("%.10q...", i.value)
+	if len(l.Value) > 10 {
+		return fmt.Sprintf("%.10q...", l.Value)
 	}
-	return fmt.Sprintf("%q", i.value)
+	return fmt.Sprintf("%q", l.Value)
 }
 
-type lexer struct {
-	name   string    // for error reports
-	input  string    // the full string being scanned (TODO replace with io.ReadCloseSeeker)
-	start  int       // start position of this current item
-	cursor int       // current cursor position in the input
-	items  chan item // channel of scanned items
+type Lexer struct {
+	Name string // for error reports
+
+	// internal
+	input  string      // the full string being scanned (TODO replace with io.ReadCloser)
+	start  int         // start position of this current item
+	cursor int         // current cursor position in the input
+	items  chan Lexeme // channel of scanned items
 }
 
-type stateFn func(*lexer) stateFn
+type stateFn func(*Lexer) stateFn
 
 // run will drive the lexer state transitions
-func (lx *lexer) run() {
+func (lx *Lexer) run() {
 	for state := lexAny; state != nil; {
 		state = state(lx)
 	}
-	lx.emit(itemEOF)
+	lx.emit(ItemEOF)
 	close(lx.items)
 }
 
@@ -63,7 +64,7 @@ func (lx *lexer) run() {
 // Note: This will return zero if lx.cursor is <= lx.start. Preventing code from
 //       attempting to scan backward from _start_ will negate the need
 //       to use the io.Scanner interface when replacing the input string with an io.Reader
-func (lx *lexer) prevWidth() int {
+func (lx *Lexer) prevWidth() int {
 	for j := lx.cursor - 1; j >= lx.start; j-- {
 		if lx.input[j]&192 == 128 {
 			// most significant bits are 10, hence part of a uft8 multibyte suffix
@@ -74,8 +75,10 @@ func (lx *lexer) prevWidth() int {
 	return 0
 }
 
+const eofChar rune = 0 // nullcode used by scanner
+
 // next will advance forward one rune width
-func (lx *lexer) next() rune {
+func (lx *Lexer) next() rune {
 	if lx.cursor >= len(lx.input) {
 		return eofChar
 	}
@@ -85,24 +88,24 @@ func (lx *lexer) next() rune {
 }
 
 // peek will show the next character without advancing the cursor
-func (lx *lexer) peek() rune {
+func (lx *Lexer) peek() rune {
 	next := lx.next()
 	lx.backup()
 	return next
 }
 
 // ignore will skip all input since the last emit|ignore
-func (lx *lexer) ignore() {
+func (lx *Lexer) ignore() {
 	lx.start = lx.cursor
 }
 
 // backup will undo next steps since
-func (lx *lexer) backup() {
+func (lx *Lexer) backup() {
 	lx.cursor -= lx.prevWidth()
 }
 
 // accept consumes the next rune if it is in the valid set
-func (lx *lexer) accept(valid string) bool {
+func (lx *Lexer) accept(valid string) bool {
 	nxt := lx.next()
 	if nxt == eofChar {
 		return false
@@ -115,7 +118,7 @@ func (lx *lexer) accept(valid string) bool {
 }
 
 // acceptRun will consume zero or more characters in the valid rune set
-func (lx *lexer) acceptRun(valid string) {
+func (lx *Lexer) acceptRun(valid string) {
 	for {
 		if !lx.accept(valid) {
 			return
@@ -124,32 +127,32 @@ func (lx *lexer) acceptRun(valid string) {
 }
 
 // emit passes a lexeme item over the channel
-func (lx *lexer) emit(t itemType) {
-	lx.items <- item{
-		typ:   t,
-		value: lx.input[lx.start:lx.cursor],
+func (lx *Lexer) emit(t ItemType) {
+	lx.items <- Lexeme{
+		Type:  t,
+		Value: lx.input[lx.start:lx.cursor],
 	}
 	lx.start = lx.cursor
 }
 
 // error emits an lexing error and continues to scan
-func (lx *lexer) errorf(template string, params ...interface{}) stateFn {
-	lx.items <- item{
-		typ:   itemError,
-		value: fmt.Sprintf(template, params...),
+func (lx *Lexer) errorf(template string, params ...interface{}) stateFn {
+	lx.items <- Lexeme{
+		Type:  ItemError,
+		Value: fmt.Sprintf(template, params...),
 	}
 	return lexAny
 }
 
 // lexAny is the first state for parsing
-func lexAny(lx *lexer) stateFn {
+func lexAny(lx *Lexer) stateFn {
 	switch char := lx.next(); {
 	case matchCharset(char, charNonZeroDigit):
 		lx.backup()
 		return lexNumber
 	case char == '-':
-		// this is an sign if it is the start of the line or
-		// the previous character is a left-paren (no spaces)
+		// this is an unary sign if it is that the start of the line or
+		// if the previous character is a left-paren (\w no spaces!)
 		if prev, _ := utf8.DecodeLastRuneInString(lx.input[:lx.start]); lx.cursor == 1 || prev == '(' {
 			// lex the number including the sign
 			lx.backup()
@@ -163,10 +166,10 @@ func lexAny(lx *lexer) stateFn {
 		lx.ignore()
 		return lexAny
 	case char == '(':
-		lx.emit(itemLeftParen)
+		lx.emit(ItemLeftParen)
 		return lexAny
 	case char == ')':
-		lx.emit(itemRightParen)
+		lx.emit(ItemRightParen)
 		return lexAny
 	case char == eofChar:
 		return nil
@@ -176,7 +179,7 @@ func lexAny(lx *lexer) stateFn {
 }
 
 // lexNumber will scan a decimal number with optional negation, eg -12.345
-func lexNumber(lx *lexer) stateFn {
+func lexNumber(lx *Lexer) stateFn {
 	lx.accept("-")
 	if !lx.accept("123456789") {
 		return lx.errorf("invalid number")
@@ -188,14 +191,14 @@ func lexNumber(lx *lexer) stateFn {
 		}
 		lx.acceptRun("0123456789")
 	}
-	lx.emit(itemNumber)
+	lx.emit(ItemNumber)
 	return lexAny
 }
 
 // lexOperator will scan for operator symbols
-func lexOperator(lx *lexer) stateFn {
+func lexOperator(lx *Lexer) stateFn {
 	if lx.accept("+-*/^&|") {
-		lx.emit(itemOperator)
+		lx.emit(ItemOperator)
 		return lexAny
 	}
 	panic("Lexer bug unexpected operator character")
@@ -203,11 +206,11 @@ func lexOperator(lx *lexer) stateFn {
 
 // lex will concurrently scan the input string, delivering lexeme items over the channel
 // as they become available
-func lex(name, input string) (*lexer, <-chan item) {
-	l := &lexer{
-		name:  name,
+func lex(name, input string) (*Lexer, <-chan Lexeme) {
+	l := &Lexer{
+		Name:  name,
 		input: input,
-		items: make(chan item),
+		items: make(chan Lexeme),
 	}
 	go l.run() // concurrently scan input, pushing items onto the channel
 	return l, l.items
