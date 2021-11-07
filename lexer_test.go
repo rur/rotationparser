@@ -10,99 +10,99 @@ func Test_lex(t *testing.T) {
 	tests := []struct {
 		name  string
 		input string
-		want  []item
+		want  []Lexeme
 	}{
 		{
 			name:  "Basic",
 			input: "123",
-			want:  []item{{itemNumber, "123"}, {itemEOF, ""}},
+			want:  []Lexeme{{ItemNumber, "123"}, {ItemEOF, ""}},
 		},
 		{
 			name:  "Basic negation",
 			input: "-123",
-			want:  []item{{itemNumber, "-123"}, {itemEOF, ""}},
+			want:  []Lexeme{{ItemNumber, "-123"}, {ItemEOF, ""}},
 		},
 		{
 			name:  "expression",
 			input: "1 + 2",
-			want: []item{
-				{itemNumber, "1"},
-				{itemOperator, "+"},
-				{itemNumber, "2"},
-				{itemEOF, ""},
+			want: []Lexeme{
+				{ItemNumber, "1"},
+				{ItemOperator, "+"},
+				{ItemNumber, "2"},
+				{ItemEOF, ""},
 			},
 		},
 		{
 			name:  "conjunction operator",
 			input: "123&& 567",
-			want: []item{
-				{itemNumber, "123"},
-				{itemOperator, "&&"},
-				{itemNumber, "567"},
-				{itemEOF, ""},
+			want: []Lexeme{
+				{ItemNumber, "123"},
+				{ItemOperator, "&&"},
+				{ItemNumber, "567"},
+				{ItemEOF, ""},
 			},
 		},
 		{
 			name:  "compound negation",
 			input: "1 + (-2)",
-			want: []item{
-				{itemNumber, "1"},
-				{itemOperator, "+"},
-				{itemLeftParen, "("},
-				{itemNumber, "-2"},
-				{itemRightParen, ")"},
-				{itemEOF, ""},
+			want: []Lexeme{
+				{ItemNumber, "1"},
+				{ItemOperator, "+"},
+				{ItemLeftParen, "("},
+				{ItemNumber, "-2"},
+				{ItemRightParen, ")"},
+				{ItemEOF, ""},
 			},
 		},
 		{
 			name:  "negative expression",
 			input: "199-243",
-			want: []item{
-				{itemNumber, "199"},
-				{itemOperator, "-"},
-				{itemNumber, "243"},
-				{itemEOF, ""},
+			want: []Lexeme{
+				{ItemNumber, "199"},
+				{ItemOperator, "-"},
+				{ItemNumber, "243"},
+				{ItemEOF, ""},
 			},
 		},
 		{
 			name:  "compound expression",
 			input: "199-243 *   6",
-			want: []item{
-				{itemNumber, "199"},
-				{itemOperator, "-"},
-				{itemNumber, "243"},
-				{itemOperator, "*"},
-				{itemNumber, "6"},
-				{itemEOF, ""},
+			want: []Lexeme{
+				{ItemNumber, "199"},
+				{ItemOperator, "-"},
+				{ItemNumber, "243"},
+				{ItemOperator, "*"},
+				{ItemNumber, "6"},
+				{ItemEOF, ""},
 			},
 		},
 		{
 			name:  "decimal number",
 			input: "199.243",
-			want: []item{
-				{itemNumber, "199.243"},
-				{itemEOF, ""},
+			want: []Lexeme{
+				{ItemNumber, "199.243"},
+				{ItemEOF, ""},
 			},
 		},
 		{
 			name:  "paranthesis",
 			input: "(19.9 + 3) & 243",
-			want: []item{
-				{itemLeftParen, "("},
-				{itemNumber, "19.9"},
-				{itemOperator, "+"},
-				{itemNumber, "3"},
-				{itemRightParen, ")"},
-				{itemOperator, "&"},
-				{itemNumber, "243"},
-				{itemEOF, ""},
+			want: []Lexeme{
+				{ItemLeftParen, "("},
+				{ItemNumber, "19.9"},
+				{ItemOperator, "+"},
+				{ItemNumber, "3"},
+				{ItemRightParen, ")"},
+				{ItemOperator, "&"},
+				{ItemNumber, "243"},
+				{ItemEOF, ""},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, tokens := lex(tt.name, tt.input)
-			var got []item
+			var got []Lexeme
 			for item := range tokens {
 				got = append(got, item)
 			}
@@ -116,12 +116,12 @@ func Test_lex(t *testing.T) {
 func Test_prevWidth(t *testing.T) {
 	tests := []struct {
 		name string
-		lx   *lexer
+		lx   *Lexer
 		want []int
 	}{
 		{
 			name: "basic ASCII",
-			lx: &lexer{
+			lx: &Lexer{
 				input:  "abcdef",
 				start:  0,
 				cursor: 6,
@@ -130,7 +130,7 @@ func Test_prevWidth(t *testing.T) {
 		},
 		{
 			name: "mutlibyte rune",
-			lx: &lexer{
+			lx: &Lexer{
 				input:  "de世界f",
 				start:  0,
 				cursor: len("de世界f"),
