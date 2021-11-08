@@ -4,11 +4,27 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 
 	parser "github.com/rur/rotation-parser"
 )
 
+const help = `Simple a REPL to show the precadence-adjusted AST for simple expressions.
+
+For example
+
+     eXpr-> 1 + 2
+     ─> "+"
+         ├── "2"
+         └── "1"
+
+Commands
+	?      Print error message
+	exit   Exit the REPLs
+`
+
 func main() {
+	fmt.Println(help)
 Read:
 	for {
 		var line string
@@ -18,9 +34,15 @@ Read:
 		if err != nil {
 			panic(err)
 		}
-		if line == "exit\n" {
+		switch strings.TrimSpace(line) {
+		case "?":
+			fmt.Println(help)
+			continue Read
+
+		case "exit":
 			fmt.Println(">>> graceful exit")
 			return
+
 		}
 
 		_, tokenStream := parser.Lex("parseXpr", line)

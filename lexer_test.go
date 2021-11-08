@@ -33,11 +33,11 @@ func Test_lex(t *testing.T) {
 			},
 		},
 		{
-			name:  "conjunction operator",
-			input: "123&& 567",
+			name:  "bitwise operator",
+			input: "123& 567",
 			want: []Lexeme{
 				{ItemNumber, "123"},
-				{ItemOperator, "&&"},
+				{ItemOperator, "&"},
 				{ItemNumber, "567"},
 				{ItemEOF, ""},
 			},
