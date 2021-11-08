@@ -21,6 +21,10 @@ func ParseBinaryExpression(items []Lexeme) (out *Node) {
 		case ItemNumber:
 			lhs = &Node{Item: item}
 		case ItemOperator: // infix operators
+			if lhs == nil {
+				// TODO: add graceful error handling
+				panic(fmt.Sprintf("Infix binary expression missing left operand %v", items))
+			}
 			out = &Node{
 				Item:  item,
 				Left:  lhs,
@@ -28,6 +32,7 @@ func ParseBinaryExpression(items []Lexeme) (out *Node) {
 			}
 			return
 		default:
+			// TODO: add graceful error handling
 			panic(fmt.Sprintf("Not yet supported: %q from %v", item, items[i:]))
 		}
 	}
@@ -61,7 +66,7 @@ func precadence(item Lexeme) int {
 	switch item.Type {
 	case ItemOperator:
 		switch item.Value {
-		case "&", "|":
+		case "&", "|", "^":
 			return 10
 		case "+", "-":
 			return 100
