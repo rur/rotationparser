@@ -12,7 +12,7 @@ Just curious to find out how far this approach will take me.
 Interactive expression parser to help while experimenting with
 the expression syntax.
 
-```bash
+```
 $ go run ./cmd/parseXpr
 ...
 
@@ -20,6 +20,18 @@ eXpr: 1 + 2
 => "+"
     ├── "2"
     └── "1"
-...
+
+eXpr: -123 * 3.4 + 5 - 19 / 4.3
+=> "-"
+    ├── "/"
+    │    ├── "4.3"
+    │    └── "19"
+    └── "+"
+         ├── "5"
+         └── "*"
+              ├── "3.4"
+              └── "-123"
+
+eXpr: ...
 
 ```

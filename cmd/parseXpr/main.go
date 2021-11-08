@@ -51,13 +51,23 @@ Read:
 			if item.Type == parser.ItemEOF {
 				break
 			} else if item.Type == parser.ItemError {
-				fmt.Println("Error:", item.Value)
+				fmt.Println("Lex error:", item.Value)
 				continue Read
 			}
 			items = append(items, item)
 		}
 
-		node := parser.ParseBinaryExpression(items)
-		fmt.Println(parser.SprintNodeTree(node))
+		func() {
+			// in-leu of proper error handling, this will have to do for now
+			defer func() {
+				err := recover()
+				if err != nil {
+					fmt.Println("Parser error: ", err)
+				}
+			}()
+			node := parser.ParseBinaryExpression(items)
+			fmt.Println(parser.SprintNodeTree(node))
+		}()
+
 	}
 }
