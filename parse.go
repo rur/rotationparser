@@ -1,40 +1,44 @@
 package rotationparser
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Node struct {
-	Token Token
+	Item  Lexeme
 	Left  *Node
 	Right *Node
 }
 
-type Token struct {
-	Type TokenType
-	Code string
+func ParseExpression(name, input string) *Node {
+	_, tokenStream := Lex(name, input)
+	items := make([]Lexeme, 0, len(input))
+	for item := range tokenStream {
+		if item.Type == ItemEOF {
+			break
+		}
+		items = append(items, item)
+	}
+	return ParseBinaryExpression(items)
 }
 
-func (token *Token) String() string {
-	return fmt.Sprintf("{%d, %s}", token.Type, token.Code)
-}
-
-// ParseExpression([]Token{"12", "*", "5", "+ "7"})
-// => {+ {* {12} {5}} {7}}
-func ParseExpression(tokens []Token) (out *Node) {
+// ParseBinaryExpression returns the AST for a binary expression
+func ParseBinaryExpression(items []Lexeme) (out *Node) {
 	defer applyPrecadence(&out)
 	var lhs *Node
-	for i, token := range tokens {
-		switch token.Type {
-		case Factor:
-			lhs = &Node{Token: token}
-		case Minus, Plus, Multiply, Divide: // infix operators
+	for i, item := range items {
+		switch item.Type {
+		case ItemNumber:
+			lhs = &Node{Item: item}
+		case ItemOperator: // infix operators
 			out = &Node{
-				Token: token,
+				Item:  item,
 				Left:  lhs,
-				Right: ParseExpression(tokens[i+1:]), // TODO: guard against index error
+				Right: ParseBinaryExpression(items[i+1:]), // TODO: guard against index error
 			}
 			return
 		default:
-			panic(fmt.Sprintf("Not yet supported: %v from %v", token, tokens[i:]))
+			panic(fmt.Sprintf("Not yet supported: %v from %v", item, items[i:]))
 		}
 	}
 	out = lhs
@@ -45,8 +49,8 @@ func applyPrecadence(result **Node) {
 	if *result == nil || (*result).Right == nil {
 		return
 	}
-	delta := Precadence((*result).Token.Type) - Precadence((*result).Right.Token.Type)
-	if delta < 0 || delta == 0 && RightAssociative((*result).Token.Type) {
+	delta := precadence((*result).Item) - precadence((*result).Right.Item)
+	if delta < 0 || delta == 0 && rightAssociative((*result).Item) {
 		// do nothing
 		return
 	}
@@ -58,4 +62,27 @@ func applyPrecadence(result **Node) {
 	lift.Left = top
 	// apply recursively after the prev top nodes right side was changed
 	applyPrecadence(&lift.Left)
+}
+
+func precadence(item Lexeme) int {
+	switch item.Type {
+	case ItemOperator:
+		switch item.Value {
+		case "&", "|":
+			return 10
+		case "+", "-":
+			return 100
+		case "*", "/":
+			return 1000
+		default:
+			return 10000
+		}
+	default:
+		return 999999
+	}
+}
+
+func rightAssociative(item Lexeme) bool {
+	// none yet
+	return false
 }

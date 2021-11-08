@@ -101,7 +101,7 @@ func Test_lex(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, tokens := lex(tt.name, tt.input)
+			_, tokens := Lex(tt.name, tt.input)
 			var got []Lexeme
 			for item := range tokens {
 				got = append(got, item)

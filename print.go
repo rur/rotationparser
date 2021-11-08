@@ -14,8 +14,8 @@ func SprintNodeTree(v *Node) string {
 	}
 	str := strings.Builder{}
 	str.WriteString("- ")
-	str.WriteString(v.Token.Code)
-	fprintViewTree(&str, []byte("  "), []*Node{v.Left, v.Right})
+	str.WriteString(v.Item.String())
+	fprintViewTree(&str, []byte("  "), []*Node{v.Right, v.Left})
 	return str.String()
 }
 
@@ -29,9 +29,9 @@ func fprintViewTree(w io.Writer, prefix []byte, children []*Node) {
 		last := i == len(children)-1
 		w.Write(append([]byte{'\n'}, prefix...))
 		if last {
-			w.Write([]byte("'- " + sub.Token.Code))
+			w.Write([]byte("'- " + sub.Item.String()))
 		} else {
-			w.Write([]byte("|- " + sub.Token.Code))
+			w.Write([]byte("|- " + sub.Item.String()))
 		}
 		var subPrefix []byte
 		if last {
@@ -39,6 +39,6 @@ func fprintViewTree(w io.Writer, prefix []byte, children []*Node) {
 		} else {
 			subPrefix = append(prefix, []byte("|  ")...)
 		}
-		fprintViewTree(w, subPrefix, []*Node{sub.Left, sub.Right})
+		fprintViewTree(w, subPrefix, []*Node{sub.Right, sub.Left})
 	}
 }

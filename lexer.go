@@ -18,7 +18,8 @@ const (
 	ItemRightParen
 )
 
-// item is a lexeme for this lexer
+// Lexeme is a token outputted by the lexer, the value is a
+// potentially empty substring of the input.
 type Lexeme struct {
 	Type  ItemType
 	Value string
@@ -38,6 +39,7 @@ func (l Lexeme) String() string {
 	return fmt.Sprintf("%q", l.Value)
 }
 
+// Lexer is a scanning machine instance
 type Lexer struct {
 	Name string // for error reports
 
@@ -206,7 +208,7 @@ func lexOperator(lx *Lexer) stateFn {
 
 // lex will concurrently scan the input string, delivering lexeme items over the channel
 // as they become available
-func lex(name, input string) (*Lexer, <-chan Lexeme) {
+func Lex(name, input string) (*Lexer, <-chan Lexeme) {
 	l := &Lexer{
 		Name:  name,
 		input: input,
@@ -229,7 +231,19 @@ const (
 	charNewline
 )
 
-// matchCharset checks that the character match the type mask
+// matchCharset checks that the character matches the type mask provided.
+// A range of charater sets can be specified, for example...
+//
+//     // case-insensitive alpha num value including underscore
+//     matchCharset(
+//       myRune,
+//       charAlphaLower&
+//         charAlphaUpper&
+//         charUnderscore&
+//         charNonZeroDigit&
+//         charZero,
+//     )
+//
 func matchCharset(char rune, mask charType) (match bool) {
 	var typ charType
 	defer func() {
