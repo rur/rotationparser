@@ -10,21 +10,11 @@ type Node struct {
 	Right *Node
 }
 
-func ParseExpression(name, input string) *Node {
-	_, tokenStream := Lex(name, input)
-	items := make([]Lexeme, 0, len(input))
-	for item := range tokenStream {
-		if item.Type == ItemEOF {
-			break
-		}
-		items = append(items, item)
-	}
-	return ParseBinaryExpression(items)
-}
-
 // ParseBinaryExpression returns the AST for a binary expression
 func ParseBinaryExpression(items []Lexeme) (out *Node) {
+	// correct precadence as the call stack unwinds
 	defer applyPrecadence(&out)
+	// Start with right recursive only, EXPR = LHS Op EXPR(rest...)
 	var lhs *Node
 	for i, item := range items {
 		switch item.Type {
@@ -38,13 +28,15 @@ func ParseBinaryExpression(items []Lexeme) (out *Node) {
 			}
 			return
 		default:
-			panic(fmt.Sprintf("Not yet supported: %v from %v", item, items[i:]))
+			panic(fmt.Sprintf("Not yet supported: %q from %v", item, items[i:]))
 		}
 	}
 	out = lhs
 	return
 }
 
+// applyPrecadence will correct left hand side precadence rules
+// for a right-weighted AST subtree
 func applyPrecadence(result **Node) {
 	if *result == nil || (*result).Right == nil {
 		return
@@ -64,6 +56,7 @@ func applyPrecadence(result **Node) {
 	applyPrecadence(&lift.Left)
 }
 
+// precadence tabulates numbers used to compare the evaluation priority of a term
 func precadence(item Lexeme) int {
 	switch item.Type {
 	case ItemOperator:
@@ -82,6 +75,8 @@ func precadence(item Lexeme) int {
 	}
 }
 
+// rightAssociative tabulates which operators are right associative (evaluating right to left)
+// it will return false if the item is left associating (evaluating left to right)
 func rightAssociative(item Lexeme) bool {
 	// none yet
 	return false

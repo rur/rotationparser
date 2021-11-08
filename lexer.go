@@ -164,7 +164,7 @@ func lexAny(lx *Lexer) stateFn {
 	case matchCharset(char, charSymbol):
 		lx.backup()
 		return lexOperator
-	case matchCharset(char, charWhitespace):
+	case matchCharset(char, charWhitespace|charNewline):
 		lx.ignore()
 		return lexAny
 	case char == '(':
@@ -176,7 +176,7 @@ func lexAny(lx *Lexer) stateFn {
 	case char == eofChar:
 		return nil
 	default:
-		return lx.errorf("Unexpected character encountered")
+		return lx.errorf("Unexpected character encountered %q", string([]rune{char}))
 	}
 }
 
@@ -237,10 +237,10 @@ const (
 //     // case-insensitive alpha num value including underscore
 //     matchCharset(
 //       myRune,
-//       charAlphaLower&
-//         charAlphaUpper&
-//         charUnderscore&
-//         charNonZeroDigit&
+//       charAlphaLower|
+//         charAlphaUpper|
+//         charUnderscore|
+//         charNonZeroDigit|
 //         charZero,
 //     )
 //
