@@ -13,7 +13,7 @@ func SprintNodeTree(v *Node) string {
 		return "- nil"
 	}
 	str := strings.Builder{}
-	str.WriteString("─> ")
+	str.WriteString("=> ")
 	str.WriteString(v.Item.String())
 	fprintViewTree(&str, []byte("    "), []*Node{v.Right, v.Left})
 	return str.String()

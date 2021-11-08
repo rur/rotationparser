@@ -6,15 +6,15 @@ import (
 	"os"
 	"strings"
 
-	parser "github.com/rur/rotation-parser"
+	parser "github.com/rur/rotationparser"
 )
 
 const help = `Simple a REPL to show the precadence-adjusted AST for simple expressions.
 
 For example
 
-     eXpr-> 1 + 2
-     ─> "+"
+     eXpr: 1 + 2
+     => "+"
          ├── "2"
          └── "1"
 
@@ -28,7 +28,7 @@ func main() {
 Read:
 	for {
 		var line string
-		fmt.Printf("\neXpr-> ")
+		fmt.Printf("\neXpr: ")
 		reader := bufio.NewReader(os.Stdin)
 		line, err := reader.ReadString('\n')
 		if err != nil {

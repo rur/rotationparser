@@ -26,7 +26,7 @@ func TestParseExpression(t *testing.T) {
 			name:   "Basic",
 			tokens: mustTokenize("3+4"),
 			want: []string{
-				`─> "+"`,
+				`=> "+"`,
 				`    ├── "4"`,
 				`    └── "3"`,
 			},
@@ -35,7 +35,7 @@ func TestParseExpression(t *testing.T) {
 			name:   "Compound expression same precadence",
 			tokens: mustTokenize("3 + 4 - 5"),
 			want: []string{
-				`─> "-"`,
+				`=> "-"`,
 				`    ├── "5"`,
 				`    └── "+"`,
 				`         ├── "4"`,
@@ -46,7 +46,7 @@ func TestParseExpression(t *testing.T) {
 			name:   "Compound expression varying precadence",
 			tokens: mustTokenize(`3 + 4 * 5`),
 			want: []string{
-				`─> "+"`,
+				`=> "+"`,
 				`    ├── "*"`,
 				`    │    ├── "5"`,
 				`    │    └── "4"`,
@@ -57,7 +57,7 @@ func TestParseExpression(t *testing.T) {
 			name:   "apply precedence recursively",
 			tokens: mustTokenize(`3 + 4 - 5 + 6 - 7`),
 			want: []string{
-				`─> "-"`,
+				`=> "-"`,
 				`    ├── "7"`,
 				`    └── "+"`,
 				`         ├── "6"`,

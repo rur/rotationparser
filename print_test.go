@@ -15,7 +15,7 @@ func TestSprintNodeTree(t *testing.T) {
 			name: "basic",
 			v:    &Node{Item: Lexeme{ItemNumber, "123"}},
 			want: []string{
-				`─> "123"`,
+				`=> "123"`,
 			},
 		},
 		{
@@ -26,7 +26,7 @@ func TestSprintNodeTree(t *testing.T) {
 				Right: &Node{Item: Lexeme{ItemNumber, "3"}},
 			},
 			want: []string{
-				`─> "+"`,
+				`=> "+"`,
 				`    ├── "3"`,
 				`    └── "2"`,
 			},
@@ -43,7 +43,7 @@ func TestSprintNodeTree(t *testing.T) {
 				Right: &Node{Item: Lexeme{ItemNumber, "4"}},
 			},
 			want: []string{
-				`─> "+"`,
+				`=> "+"`,
 				`    ├── "4"`,
 				`    └── "*"`,
 				`         ├── "3"`,
@@ -62,7 +62,7 @@ func TestSprintNodeTree(t *testing.T) {
 				Left: &Node{Item: Lexeme{ItemNumber, "4"}},
 			},
 			want: []string{
-				`─> "+"`,
+				`=> "+"`,
 				`    ├── "*"`,
 				`    │    ├── "3"`,
 				`    │    └── "2"`,
