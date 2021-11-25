@@ -152,3 +152,78 @@ func Test_prevWidth(t *testing.T) {
 		})
 	}
 }
+
+func Test_matchCharset(t *testing.T) {
+	type args struct {
+		char rune
+		mask charType
+	}
+	tests := []struct {
+		name      string
+		args      args
+		wantMatch bool
+	}{
+		{
+			name:      "basic alpha",
+			args:      args{'a', charAlphaLower},
+			wantMatch: true,
+		},
+		{
+			name:      "basic uppercase",
+			args:      args{'A', charAlphaUpper},
+			wantMatch: true,
+		},
+		{
+			name:      "basic digit",
+			args:      args{'9', charNonZeroDigit},
+			wantMatch: true,
+		},
+		{
+			name:      "zero",
+			args:      args{'0', charZero},
+			wantMatch: true,
+		},
+		{
+			name:      "digit including zero",
+			args:      args{'0', charNonZeroDigit | charZero},
+			wantMatch: true,
+		},
+		{
+			name:      "case insensitive 1",
+			args:      args{'a', charAlphaLower | charAlphaUpper},
+			wantMatch: true,
+		},
+		{
+			name:      "case insensitive 2",
+			args:      args{'A', charAlphaLower | charAlphaUpper},
+			wantMatch: true,
+		},
+		{
+			name:      "not character",
+			args:      args{'_', charAlphaLower | charAlphaUpper},
+			wantMatch: false,
+		},
+		{
+			name:      "not digit",
+			args:      args{'_', charNonZeroDigit},
+			wantMatch: false,
+		},
+		{
+			name:      "symbol",
+			args:      args{'+', charSymbol},
+			wantMatch: true,
+		},
+		{
+			name:      "not symbol",
+			args:      args{'#', charSymbol},
+			wantMatch: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotMatch := matchCharset(tt.args.char, tt.args.mask); gotMatch != tt.wantMatch {
+				t.Errorf("matchCharset() = %v, want %v", gotMatch, tt.wantMatch)
+			}
+		})
+	}
+}
