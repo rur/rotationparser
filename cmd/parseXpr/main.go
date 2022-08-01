@@ -9,7 +9,7 @@ import (
 	parser "github.com/rur/rotationparser"
 )
 
-const help = `Simple a REPL to show the precadence-adjusted AST for simple expressions.
+const help = `Simple a REPL to show the precedence-adjusted AST for simple expressions.
 
 For example
 

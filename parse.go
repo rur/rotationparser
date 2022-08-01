@@ -12,8 +12,8 @@ type Node struct {
 
 // ParseBinaryExpression returns the AST for a binary expression
 func ParseBinaryExpression(items []Lexeme) (out *Node) {
-	// correct precadence as the call stack unwinds
-	defer applyPrecadence(&out)
+	// correct precedence as the call stack unwinds
+	defer applyPrecedence(&out)
 	// Start with right recursive only, EXPR = LHS Op EXPR(rest...)
 	var lhs *Node
 	for i, item := range items {
@@ -40,13 +40,13 @@ func ParseBinaryExpression(items []Lexeme) (out *Node) {
 	return
 }
 
-// applyPrecadence will correct left hand side precadence rules
+// applyPrecedence will correct left hand side precedence rules
 // for a right-weighted AST subtree
-func applyPrecadence(result **Node) {
+func applyPrecedence(result **Node) {
 	if *result == nil || (*result).Right == nil {
 		return
 	}
-	delta := precadence((*result).Item) - precadence((*result).Right.Item)
+	delta := precedence((*result).Item) - precedence((*result).Right.Item)
 	if delta < 0 || delta == 0 && rightAssociative((*result).Item) {
 		// do nothing
 		return
@@ -58,11 +58,11 @@ func applyPrecadence(result **Node) {
 	top.Right = lift.Left
 	lift.Left = top
 	// apply recursively after the prev top nodes right side was changed
-	applyPrecadence(&lift.Left)
+	applyPrecedence(&lift.Left)
 }
 
-// precadence tabulates numbers used to compare the evaluation priority of a term
-func precadence(item Lexeme) int {
+// precedence tabulates numbers used to compare the evaluation priority of a term
+func precedence(item Lexeme) int {
 	switch item.Type {
 	case ItemOperator:
 		switch item.Value {

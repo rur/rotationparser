@@ -32,7 +32,7 @@ func TestParseExpression(t *testing.T) {
 			},
 		},
 		{
-			name:   "Compound expression same precadence",
+			name:   "Compound expression same precedence",
 			tokens: mustTokenize("3 + 4 - 5"),
 			want: []string{
 				`=> "-"`,
@@ -43,7 +43,7 @@ func TestParseExpression(t *testing.T) {
 			},
 		},
 		{
-			name:   "Compound expression varying precadence",
+			name:   "Compound expression varying precedence",
 			tokens: mustTokenize(`3 + 4 * 5`),
 			want: []string{
 				`=> "+"`,
